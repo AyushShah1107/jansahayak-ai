@@ -240,6 +240,7 @@ All endpoints, model IDs and the auth header below are taken from the official [
 |---|---|---|
 | `GET` | `/api/health` | App status + which features are configured. **Never returns secrets.** |
 | `GET` | `/api/demo` | Load the bundled sample notice; returns a `doc_id`. |
+| `GET` | `/api/selftest` | Runs one fixed grounded question against the demo notice to prove the Sarvam AI path works. Cached for 5 minutes. |
 | `POST` | `/api/documents/extract` | Validate and extract text; returns `doc_id` + metadata. |
 | `POST` | `/api/ask` | Grounded answer from a `doc_id` (or raw `text`), in a chosen language. |
 | `POST` | `/api/content/generate` | Generate one Content Studio format from the document. |
@@ -379,7 +380,9 @@ python ../tests/screenshot.py      # renders the UI headlessly
 
 **Verified in this build:** all 18 checks pass, the real Uvicorn server was booted and hit over HTTP, and the UI was rendered and reviewed at desktop (1280 px) and mobile (420 px) widths.
 
-> **Note on live AI testing:** no Sarvam API key was available in the build environment, so the AI paths were verified to *fail cleanly with a clear configuration error* rather than being executed. Set `SARVAM_API_KEY` and re-run the suite to exercise them live.
+**Live deployment check:** `GET /api/selftest` on the deployed app runs one fixed question (*"Which documents are required?"*) through Sarvam-105B and returns the answer, giving a one-request proof that the AI path and API key work in production.
+
+> **Note on live AI testing:** the AI path *is* verified live against the deployed app — `GET /api/selftest` returns a real Sarvam-105B answer grounded in the demo notice. In the build sandbox no key was available, so the local suite exercises the non-AI paths (upload, extraction, validation, static serving); set `SARVAM_API_KEY` locally to run the AI paths in the suite too.
 
 ---
 
