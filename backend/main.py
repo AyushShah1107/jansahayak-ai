@@ -7,6 +7,7 @@ server-side; the API key never leaves the server.
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -286,6 +287,59 @@ def demo_document() -> dict:
         "message": "Sample demonstration notice loaded (fictional data).",
         "is_sample": True,
     }
+
+
+# --------------------------------------------------------------------------- #
+# Self-test: proves the Sarvam AI path end-to-end over a simple GET.
+# Runs ONE fixed question against the bundled demo notice and caches the result
+# for 5 minutes, so a public GET cannot burn credits in a loop.
+# --------------------------------------------------------------------------- #
+_SELFTEST: dict = {}
+_SELFTEST_QUESTION = "Which documents are required?"
+_SELFTEST_TTL = 300
+
+
+@app.get("/api/selftest")
+async def selftest():
+    now = time.time()
+    cached = _SELFTEST.get("result")
+    if cached and now - _SELFTEST.get("at", 0) < _SELFTEST_TTL:
+        return {**cached, "cached": True}
+
+    if not sarvam.is_configured():
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "error",
+                "error": "ai_not_configured",
+                "message": "No SARVAM_API_KEY configured on the server.",
+                "ai_configured": False,
+            },
+        )
+    if not DEMO_FILE.exists():
+        raise HTTPException(status_code=500, detail="Demo document missing.")
+
+    try:
+        pages = docs.extract_pages(DEMO_FILE.name, DEMO_FILE.read_bytes())
+        doc = docs.store_document("demo_scholarship_notice.txt (sample data)", pages)
+        context, page_hint = docs.select_passages(doc, _SELFTEST_QUESTION)
+        answer = await sarvam.chat_completion(
+            qa_messages(_SELFTEST_QUESTION, context, "en-IN", page_hint)
+        )
+    except sarvam.SarvamError as exc:
+        return _ai_error(exc)
+
+    result = {
+        "status": "ok",
+        "question": _SELFTEST_QUESTION,
+        "answer": answer,
+        "language": "en-IN",
+        "model": sarvam.CHAT_MODEL,
+        "ai_configured": True,
+    }
+    _SELFTEST["result"] = result
+    _SELFTEST["at"] = now
+    return {**result, "cached": False}
 
 
 # --------------------------------------------------------------------------- #
