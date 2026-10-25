@@ -1,0 +1,17 @@
+# Render Blueprint — one-click deploy for JanSahayak AI.
+# Push this repo, then on Render: New > Blueprint > pick this repo.
+services:
+  - type: web
+    name: jansahayak-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --app-dir backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: SARVAM_API_KEY
+        sync: false          # you set this in the Render dashboard; never committed
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+      - key: CORS_ORIGINS
+        value: "*"
