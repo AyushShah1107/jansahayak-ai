@@ -109,7 +109,7 @@ Authentication uses the `api-subscription-key` header. All Sarvam calls are made
 ## Local setup
 
 ```bash
-git clone <your-repo-url> jansahayak-ai
+git clone https://github.com/AyushShah1107/jansahayak-ai.git
 cd jansahayak-ai
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r backend/requirements.txt
