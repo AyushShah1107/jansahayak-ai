@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JanSahayak AI — Government information, explained in your language</title>
+<meta name="description" content="Upload a government document, ask a question in your language, and turn the answer into something you can use or share." />
+<link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 48 48" width="40" height="40" role="img">
+          <circle cx="24" cy="24" r="23" fill="url(#g1)"/>
+          <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f59e0b"/><stop offset="0.5" stop-color="#ea580c"/>
+            <stop offset="1" stop-color="#15803d"/></linearGradient></defs>
+          <path d="M15 14h18a3 3 0 0 1 3 3v17l-5-3-5 3-5-3-5 3V17a3 3 0 0 1 3-3z" fill="#fff" opacity="0.95"/>
+          <path d="M19 21h12M19 26h9" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <h1>JanSahayak AI</h1>
+        <p class="tagline">Government information, explained in your language.</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <label class="sr-only" for="uiLang">Interface language</label>
+      <select id="uiLang" class="select" title="Interface language">
+        <option value="en">English</option>
+        <option value="hi">हिन्दी</option>
+      </select>
+      <span id="healthPill" class="pill pill-wait" title="Backend status">Checking…</span>
+    </div>
+  </div>
+  <p class="purpose wrap">
+    Upload a document, ask a question in your language, understand the answer, and turn it into something you can use or share.
+  </p>
+</header>
+
+<main id="main" class="wrap">
+
+  <section class="workspace" aria-label="Main workspace">
+    <!-- LEFT COLUMN -->
+    <div class="col-left">
+      <div class="card">
+        <h2 data-i18n="upload">Upload a document <span class="hint">दस्तावेज़ अपलोड करें</span></h2>
+        <label id="dropzone" class="dropzone" for="fileInput" tabindex="0">
+          <span class="dz-icon" aria-hidden="true">📄</span>
+          <span class="dz-title" data-i18n="dropTitle">Choose a PDF or TXT file</span>
+          <span class="dz-sub">PDF या TXT फ़ाइल चुनें · max 10 MB</span>
+          <input id="fileInput" type="file" accept=".pdf,.txt,application/pdf,text/plain" hidden />
+        </label>
+        <div class="row">
+          <button id="demoBtn" class="btn btn-ghost" type="button">Load sample notice (demo data)</button>
+        </div>
+        <div id="docStatus" class="doc-status" hidden></div>
+        <details id="previewBox" class="preview" hidden>
+          <summary>View extracted text (preview)</summary>
+          <pre id="previewText"></pre>
+        </details>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="suggested">Suggested questions <span class="hint">सुझाए गए सवाल</span></h2>
+        <div id="suggestions" class="chips"></div>
+      </div>
+
+      <div class="card">
+        <h2 data-i18n="answerLang">Answer language <span class="hint">जवाब की भाषा</span></h2>
+        <label class="sr-only" for="answerLang">Answer language</label>
+        <select id="answerLang" class="select full">
+          <option value="hi-IN" selected>हिन्दी · Hindi</option>
+          <option value="en-IN">English</option>
+          <option value="bn-IN">বাংলা · Bengali</option>
+          <option value="ta-IN">தமிழ் · Tamil</option>
+          <option value="te-IN">తెలుగు · Telugu</option>
+          <option value="mr-IN">मराठी · Marathi</option>
+        </select>
+        <p class="note">All six languages are supported by Sarvam's chat, speech-to-text and text-to-speech models.</p>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-right">
+      <div class="card">
+        <h2 data-i18n="ask">Ask a question <span class="hint">अपना सवाल पूछें</span></h2>
+        <div class="ask-row">
+          <textarea id="question" rows="2" placeholder="What documents are required? / कौन से दस्तावेज़ चाहिए?"></textarea>
+        </div>
+        <div class="row wrap-row">
+          <button id="micBtn" class="btn btn-mic" type="button" title="Speak your question">
+            <span class="mic-dot" aria-hidden="true"></span> <span id="micLabel">Speak</span>
+          </button>
+          <button id="askBtn" class="btn btn-primary" type="button">Ask</button>
+          <button id="clearBtn" class="btn btn-ghost" type="button">Clear</button>
+        </div>
+        <p id="micNote" class="note"></p>
+      </div>
+
+      <div id="answerCard" class="card answer" hidden>
+        <div class="answer-head">
+          <h2 data-i18n="answer">Answer <span class="hint">जवाब</span></h2>
+          <div class="row">
+            <button id="listenBtn" class="btn btn-ghost" type="button">🔊 Listen</button>
+            <button id="copyAnsBtn" class="btn btn-ghost" type="button">Copy</button>
+          </div>
+        </div>
+        <div id="answerMeta" class="meta"></div>
+        <div id="answerText" class="answer-text" lang="hi"></div>
+        <details id="sourceBox" class="source" hidden>
+          <summary>Source passage from the document</summary>
+          <blockquote id="sourceText"></blockquote>
+          <p id="sourcePage" class="note"></p>
+        </details>
+      </div>
+
+      <div id="emptyState" class="card empty">
+        <p>Upload a document or load the sample notice, then ask a question. The answer is built only from your document — if something isn't in it, JanSahayak will say so.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENT STUDIO -->
+  <section id="studio" class="card studio" aria-label="Content Studio">
+    <div class="studio-head">
+      <h2 data-i18n="studio">Content Studio <span class="hint">सामग्री स्टूडियो</span></h2>
+      <p class="note">Turn the document into something you can share — a WhatsApp message, an announcement, a checklist, FAQs or an audio script.</p>
+    </div>
+    <div class="studio-controls">
+      <label class="field">
+        <span>Output format</span>
+        <select id="formatSel" class="select full">
+          <option value="simple">Simple explanation</option>
+          <option value="whatsapp" selected>WhatsApp message</option>
+          <option value="announcement">Short public announcement</option>
+          <option value="checklist">Important-points checklist</option>
+          <option value="faq">Frequently asked questions</option>
+          <option value="script">Short audio-friendly script</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Language</span>
+        <select id="studioLang" class="select full">
+          <option value="hi-IN" selected>हिन्दी · Hindi</option>
+          <option value="en-IN">English</option>
+          <option value="bn-IN">বাংলা · Bengali</option>
+          <option value="ta-IN">தமிழ் · Tamil</option>
+          <option value="te-IN">తెలుగు · Telugu</option>
+          <option value="mr-IN">मराठी · Marathi</option>
+        </select>
+      </label>
+      <button id="genBtn" class="btn btn-primary" type="button">Generate content</button>
+    </div>
+    <p id="studioStatus" class="note"></p>
+    <textarea id="studioOut" class="studio-out" rows="10" placeholder="Generated content will appear here — edit it before copying or downloading."></textarea>
+    <div class="row wrap-row">
+      <button id="copyStudioBtn" class="btn btn-ghost" type="button">Copy</button>
+      <button id="downloadBtn" class="btn btn-ghost" type="button">Download as TXT</button>
+      <button id="studioListenBtn" class="btn btn-ghost" type="button">🔊 Listen</button>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p><strong>Disclaimer:</strong> JanSahayak AI is an independent AI tool. It is not an official government service and is not affiliated with any government body. Answers are generated from the document you provide. Always verify important decisions, deadlines, amounts and eligibility with the relevant official source.</p>
+    <p><strong>Privacy:</strong> Uploaded documents are processed in memory on the server to answer your question and are not written to permanent storage; they expire automatically within an hour. Avoid uploading unnecessary sensitive personal information. When AI features are used, the relevant document text is sent to Sarvam AI to generate the response.</p>
+    <p class="note">Built for the Sarvam AI hackathon · Text &amp; voice powered by Sarvam AI (Sarvam-105B, Saaras, Bulbul).</p>
+  </footer>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+  // Environment-aware API base. Same-origin by default (FastAPI serves this page).
+  // Override for a split deployment by setting window.JANSAHAYAK_API_BASE before this script,
+  // or serve an /api-base.js file that sets it.
+  window.JANSAHAYAK_API_BASE =
+    window.JANSAHAYAK_API_BASE ||
+    (location.protocol === "file:" ? "http://localhost:8000" : "");
+</script>
+<script src="/app.js"></script>
+</body>
+</html>
